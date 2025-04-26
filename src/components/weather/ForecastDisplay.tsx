@@ -14,7 +14,7 @@ type ForecastDisplayProps = {
 
 // Skeleton component for loading state
 const ForecastSkeletonCard = () => (
-    <Card className="w-[120px] h-[210px] flex flex-col items-center p-3 bg-card/50"> {/* Used Card */}
+    <Card className="w-[120px] h-[210px] flex flex-col items-center p-3 bg-card/50 flex-shrink-0"> {/* Added flex-shrink-0 */}
         <Skeleton className="h-4 w-16 mb-2 bg-muted/50" /> {/* Date */}
         <Skeleton className="h-10 w-10 rounded-full my-2 bg-muted/50" /> {/* Icon */}
         <Skeleton className="h-6 w-12 mb-2 bg-muted/50" /> {/* Temp */}
@@ -39,7 +39,8 @@ export function ForecastDisplay({ forecasts, isLoading, error }: ForecastDisplay
             {/* Removed explicit error message here, handled by toast */}
             {/* {error && <p className="text-destructive text-center">{error}</p>} */}
 
-            <div className="relative min-h-[240px]"> {/* Container to manage height */}
+            {/* Ensure ScrollArea viewport takes necessary width */}
+             <div className="relative min-h-[240px]"> {/* Container to manage height */}
                 {isLoading && !hasData && (
                     <ScrollArea className="w-full whitespace-nowrap rounded-md border opacity-50">
                         <div className="flex w-max space-x-4 p-4 animate-pulse">
@@ -57,9 +58,11 @@ export function ForecastDisplay({ forecasts, isLoading, error }: ForecastDisplay
                         isLoading ? "opacity-50" : "opacity-100", // Fade slightly if loading new data
                          "animate-in fade-in duration-500" // Animate in when ready
                          )}>
+                        {/* Ensure this div allows content to expand horizontally */}
                         <div className="flex w-max space-x-4 p-4">
                             {forecasts.map((forecast, index) => (
-                                <ForecastCard key={`${forecast.date}-${index}`} forecast={forecast} />
+                                // Pass flex-shrink-0 via className to ensure cards don't shrink
+                                <ForecastCard key={`${forecast.date}-${index}`} forecast={forecast} className="flex-shrink-0" />
                             ))}
                         </div>
                         <ScrollBar orientation="horizontal" />
@@ -67,7 +70,7 @@ export function ForecastDisplay({ forecasts, isLoading, error }: ForecastDisplay
                 )}
 
                 {!isLoading && !hasData && !error && ( // Show only if not loading, no data, and no error
-                    <div className="flex items-center justify-center h-[240px] border rounded-md text-muted-foreground">
+                    <div className="flex items-center justify-center h-[240px] border rounded-md text-muted-foreground bg-card"> {/* Added bg-card */}
                         <p>No forecast data available.</p>
                     </div>
                 )}

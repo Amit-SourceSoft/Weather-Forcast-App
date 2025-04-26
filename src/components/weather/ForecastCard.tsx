@@ -18,27 +18,27 @@ export function ForecastCard({ forecast, className }: ForecastCardProps) {
 
   return (
     <Card className={cn(
-        "w-[120px] flex flex-col items-center text-center shadow-md rounded-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-1 border", // Added border
+        "w-[120px] flex flex-col items-center text-center shadow-md rounded-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-1 border overflow-hidden flex-shrink-0", // Added overflow-hidden and flex-shrink-0
         className // Merge additional classes
         )}>
       <CardHeader className="p-2 w-full">
-        <CardTitle className="text-xs font-medium text-muted-foreground">{formattedDate}</CardTitle>
+        <CardTitle className="text-xs font-medium text-muted-foreground whitespace-nowrap">{formattedDate}</CardTitle> {/* Added whitespace-nowrap */}
       </CardHeader>
-      <CardContent className="p-3 flex flex-col items-center gap-1 flex-grow justify-between">
+      <CardContent className="p-3 flex flex-col items-center gap-1 flex-grow justify-between w-full"> {/* Ensured w-full */}
         <WeatherIcon condition={forecast.conditions} className="w-10 h-10 text-primary mb-1 drop-shadow-sm" />
         <p className="text-lg font-semibold text-accent">{forecast.temperatureFahrenheit}°F</p>
-        <p className="text-xs text-secondary-foreground capitalize mb-2">{forecast.conditions}</p>
+        <p className="text-xs text-secondary-foreground capitalize mb-2 truncate w-full">{forecast.conditions}</p> {/* Added truncate */}
         <div className="space-y-1 text-xs text-muted-foreground">
           <div className="flex items-center gap-1 justify-center">
-            <Droplet className="w-3 h-3" />
+            <Droplet className="w-3 h-3 flex-shrink-0" /> {/* Added flex-shrink-0 */}
             <span>{forecast.humidity}%</span>
           </div>
           <div className="flex items-center gap-1 justify-center">
-            <Wind className="w-3 h-3" />
+            <Wind className="w-3 h-3 flex-shrink-0" /> {/* Added flex-shrink-0 */}
             <span>{forecast.windSpeed} mph</span>
           </div>
           <div className="flex items-center gap-1 justify-center">
-            <Umbrella className="w-3 h-3" />
+            <Umbrella className="w-3 h-3 flex-shrink-0" /> {/* Added flex-shrink-0 */}
             <span>{forecast.precipitation}"</span>
           </div>
         </div>
