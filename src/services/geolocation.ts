@@ -2,29 +2,23 @@ import type { Location } from './weather';
 
 /**
  * Retrieves the geographical coordinates for a given city name.
- * This is a placeholder and would typically involve calling a Geocoding API.
+ * This is a placeholder and simulates a successful call to a Geocoding API for any city.
  *
  * @param city The name of the city.
- * @returns A promise that resolves to a Location object or null if not found.
+ * @returns A promise that resolves to a Location object (dummy coordinates).
  */
 export async function getCoordinatesByCity(city: string): Promise<Location | null> {
-  console.log(`Fetching coordinates for city: ${city}`);
-  // Placeholder: In a real app, call a Geocoding API (e.g., OpenStreetMap Nominatim, Google Geocoding)
-  // Example dummy data:
+  console.log(`Simulating coordinate fetch for city: ${city}`);
+  // Placeholder: In a real app, call a Geocoding API.
+  // Here, we simulate success by returning consistent dummy coordinates for any city.
+  // This allows the weather fetching logic to proceed.
   await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-  const cityLower = city.toLowerCase();
-  if (cityLower === 'london') {
-    return { lat: 51.5074, lng: 0.1278 };
-  } else if (cityLower === 'tokyo') {
-    return { lat: 35.6895, lng: 139.6917 };
-  } else if (cityLower === 'new york') {
-     return { lat: 40.7128, lng: -74.0060 };
-  } else if (cityLower === 'paris') {
-    return {lat: 48.8566, lng: 2.3522};
-  }
-   // Add more cities or implement API call
-  console.warn(`No coordinates found for city: ${city}. Returning null.`);
-  return null; // Return null if city not found in dummy data or API fails
+
+  // Return consistent dummy coordinates (e.g., New York) to allow the app flow to continue
+  // The simulated weather service will return dummy data regardless of these coordinates.
+  const dummyLocation: Location = { lat: 40.7128, lng: -74.0060 };
+  console.log(`Simulated coordinates for ${city}:`, dummyLocation);
+  return dummyLocation;
 }
 
 /**
@@ -51,7 +45,24 @@ export function getCurrentLocationCoordinates(): Promise<Location | null> {
       },
       (error) => {
         console.error("Error getting current location:", error.message);
-        resolve(null); // Resolve with null on error (e.g., permission denied)
+        // Provide a more specific error message based on the error code
+        let errorMessage = 'Failed to get location.';
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                errorMessage = "Location permission denied. Please enable location services in your browser/OS settings.";
+                break;
+            case error.POSITION_UNAVAILABLE:
+                errorMessage = "Location information is unavailable.";
+                break;
+            case error.TIMEOUT:
+                errorMessage = "The request to get user location timed out.";
+                break;
+            default:
+                 errorMessage = "An unknown error occurred while trying to get location.";
+                 break;
+        }
+         console.error("Geolocation error details:", errorMessage);
+        resolve(null); // Resolve with null on error
       },
       {
         enableHighAccuracy: false, // Lower accuracy is often faster and sufficient

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { Location, Weather, DailyForecast } from '@/services/weather';
 import { getWeather, getForecast } from '@/services/weather';
-import { getCoordinatesByCity, getCurrentLocationCoordinates } from '@/services/geolocation'; // Assuming these exist
+import { getCoordinatesByCity, getCurrentLocationCoordinates } from '@/services/geolocation';
 
 export function useWeather() {
   const [currentWeather, setCurrentWeather] = useState<Weather | null>(null);
@@ -38,11 +38,14 @@ export function useWeather() {
     setIsLoading(true);
     setError(null);
     try {
+      // Simulate fetching coordinates - this will now always return dummy coordinates
       const location = await getCoordinatesByCity(city);
       if (location) {
+        // Fetch weather using the dummy coordinates but display the searched city name
         await fetchWeatherData(location, city);
       } else {
-        setError(`Could not find coordinates for ${city}.`);
+        // This case should technically not happen with the simulation, but keep for robustness
+        setError(`Could not process request for ${city}.`);
         setCurrentWeather(null);
         setForecast([]);
         setCurrentCity(undefined);
@@ -50,12 +53,13 @@ export function useWeather() {
       }
     } catch (err) {
         console.error("Error searching by city:", err);
-        setError('Failed to search for city. Please check the name and try again.');
+        setError('Failed to search for city weather. Please try again.');
         setCurrentWeather(null);
         setForecast([]);
         setCurrentCity(undefined);
-        setIsLoading(false);
+        setIsLoading(false); // Ensure loading state is reset on error
     }
+    // No finally block needed here as fetchWeatherData handles its own loading state
   }, [fetchWeatherData]);
 
   const detectLocationAndFetch = useCallback(async () => {
@@ -64,10 +68,13 @@ export function useWeather() {
     try {
       const location = await getCurrentLocationCoordinates();
       if (location) {
-        // We don't get the city name from getCurrentLocationCoordinates, so pass undefined
+        // Fetch weather for the detected coordinates, city name will be undefined initially
         await fetchWeatherData(location, undefined);
-        // Potentially add reverse geocoding here if city name is desired
+        // TODO: Optionally implement reverse geocoding here to get city name from coordinates
+        // const cityName = await getCityNameFromCoordinates(location);
+        // setCurrentCity(cityName);
       } else {
+        // Error message comes from getCurrentLocationCoordinates failure handler
         setError('Could not detect your location. Please enable location services or enter a city.');
         setCurrentWeather(null);
         setForecast([]);
@@ -80,8 +87,9 @@ export function useWeather() {
         setCurrentWeather(null);
         setForecast([]);
         setCurrentCity(undefined);
-        setIsLoading(false);
+        setIsLoading(false); // Ensure loading state is reset on error
     }
+    // No finally block needed here as fetchWeatherData handles its own loading state
   }, [fetchWeatherData]);
 
 
