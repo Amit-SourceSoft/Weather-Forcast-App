@@ -25,19 +25,26 @@ export function CurrentWeatherCard({ weather, city, isLoading, isUsingApiKey }: 
     });
   };
 
-  // Determine wind speed unit based on API usage (m/s for API, mph for simulation)
-  const windSpeedUnit = isUsingApiKey ? 'm/s' : 'm/s'; // Keep m/s for both for consistency as simulation now uses m/s
+  // Determine wind speed unit based on API usage (m/s for API, m/s for simulation)
+  const windSpeedUnit = 'm/s'; // Keep m/s for both
 
 
   return (
     <Card className="w-full max-w-md shadow-lg rounded-xl overflow-hidden transition-all duration-300 ease-in-out">
        <CardHeader className="pb-2 bg-card/50 border-b">
-         <CardTitle className="text-xl font-semibold text-center sm:text-left">
+         {/* Improved title logic and added truncate */}
+         <CardTitle className="text-xl font-semibold text-center sm:text-left truncate" title={city ? `Current Weather in ${city}` : 'Current Weather'}>
            {isLoading && !hasData ? (
               <span className="flex items-center justify-center sm:justify-start gap-2">
                  <Loader2 className="h-5 w-5 animate-spin mr-1" /> Loading Weather...
               </span>
-            ) : city ? `Current Weather in ${city}` : 'Current Weather'}
+            ) : city && city !== 'Detecting Location...' && city !== 'Detected Location' ? ( // Check against both placeholders
+              `Current Weather in ${city}`
+            ) : city && (city === 'Detecting Location...' || city === 'Detected Location') && hasData ? ( // Handle placeholders after data arrives
+               'Weather at Your Location' // Or just 'Current Weather'
+            ) : ( // Default cases
+              'Current Weather'
+            )}
          </CardTitle>
        </CardHeader>
        <CardContent className="flex flex-col items-center p-6 min-h-[200px] justify-center">
