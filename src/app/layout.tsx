@@ -11,7 +11,7 @@ import { Toaster } from "@/components/ui/toaster"; // Import the Toaster
 // No need for Geist Mono unless specifically required elsewhere
 
 export const metadata: Metadata = {
-  title: 'Forecast Frontier', // Updated App Name
+  title: 'Weather Forecast', // Updated App Name
   description: 'Your 15-day weather forecast companion.', // Updated Description
 };
 
