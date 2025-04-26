@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card'; // Import Card component
 type ForecastDisplayProps = {
   forecasts: DailyForecast[];
   isLoading: boolean;
+  isUsingApiKey: boolean; // Pass this down
   error?: string | null; // Error handled by toast, but kept for potential future use
 };
 
@@ -28,7 +29,7 @@ const ForecastSkeletonCard = () => (
 );
 
 
-export function ForecastDisplay({ forecasts, isLoading, error }: ForecastDisplayProps) {
+export function ForecastDisplay({ forecasts, isLoading, isUsingApiKey, error }: ForecastDisplayProps) {
     const hasData = forecasts.length > 0;
 
     return (
@@ -62,7 +63,13 @@ export function ForecastDisplay({ forecasts, isLoading, error }: ForecastDisplay
                         <div className="flex w-max space-x-4 p-4">
                             {forecasts.map((forecast, index) => (
                                 // Pass flex-shrink-0 via className to ensure cards don't shrink
-                                <ForecastCard key={`${forecast.date}-${index}`} forecast={forecast} className="flex-shrink-0" />
+                                // Pass isUsingApiKey to ForecastCard
+                                <ForecastCard
+                                    key={`${forecast.date}-${index}`}
+                                    forecast={forecast}
+                                    isUsingApiKey={isUsingApiKey}
+                                    className="flex-shrink-0"
+                                />
                             ))}
                         </div>
                         <ScrollBar orientation="horizontal" />

@@ -4,14 +4,16 @@ import { WeatherIcon } from './WeatherIcon';
 import { Droplet, Wind, Loader2 } from 'lucide-react'; // Added Loader2 for spinning icon
 import { MapPin } from 'lucide-react'; // Added MapPin for the placeholder state
 import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
+import { cn } from '@/lib/utils'; // Import cn utility
 
 type CurrentWeatherCardProps = {
   weather: Weather | null;
   city?: string;
   isLoading: boolean;
+  isUsingApiKey: boolean; // Pass this down
 };
 
-export function CurrentWeatherCard({ weather, city, isLoading }: CurrentWeatherCardProps) {
+export function CurrentWeatherCard({ weather, city, isLoading, isUsingApiKey }: CurrentWeatherCardProps) {
   const hasData = !!weather;
 
   const formatValue = (value: number | undefined | null, fractionDigits = 0) => {
@@ -22,6 +24,9 @@ export function CurrentWeatherCard({ weather, city, isLoading }: CurrentWeatherC
         maximumFractionDigits: fractionDigits
     });
   };
+
+  // Determine wind speed unit based on API usage (example)
+  const windSpeedUnit = isUsingApiKey ? 'm/s' : 'mph'; // API uses metric (m/s), simulation uses mph
 
 
   return (
@@ -54,14 +59,15 @@ export function CurrentWeatherCard({ weather, city, isLoading }: CurrentWeatherC
             />
             <div className="text-center">
               <p className="text-5xl font-bold text-primary drop-shadow-sm">
-                {formatValue(weather.temperatureFarenheit, 0)}°F
+                {/* Display Celsius temperature */}
+                {formatValue(weather.temperatureCelsius, 0)}°C
               </p>
               <p className="text-lg text-secondary-foreground capitalize">{weather.conditions}</p>
             </div>
 
             {/* Display Humidity and Wind Speed if available */}
             {(weather.humidity !== undefined || weather.windSpeed !== undefined) && (
-                <div className="flex justify-around w-full max-w-[200px] mt-4 text-sm text-muted-foreground">
+                <div className="flex justify-around w-full max-w-[250px] mt-4 text-sm text-muted-foreground"> {/* Increased max-w slightly */}
                   {weather.humidity !== undefined && (
                       <div className="flex items-center gap-1" title="Humidity">
                         <Droplet className="w-4 h-4" />
@@ -69,9 +75,10 @@ export function CurrentWeatherCard({ weather, city, isLoading }: CurrentWeatherC
                       </div>
                   )}
                   {weather.windSpeed !== undefined && (
-                       <div className="flex items-center gap-1" title="Wind Speed">
+                       <div className="flex items-center gap-1" title={`Wind Speed (${windSpeedUnit})`}> {/* Dynamic title */}
                         <Wind className="w-4 h-4" />
-                        <span>{formatValue(weather.windSpeed, 0)} mph</span>
+                        {/* Display wind speed with unit */}
+                        <span>{formatValue(weather.windSpeed, 1)} {windSpeedUnit}</span>
                       </div>
                   )}
                 </div>

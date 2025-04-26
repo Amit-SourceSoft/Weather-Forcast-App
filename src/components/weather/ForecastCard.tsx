@@ -7,10 +7,11 @@ import { cn } from '@/lib/utils';
 
 type ForecastCardProps = {
   forecast: DailyForecast;
+  isUsingApiKey: boolean; // Pass this down
   className?: string; // Allow passing additional classes
 };
 
-export function ForecastCard({ forecast, className }: ForecastCardProps) {
+export function ForecastCard({ forecast, isUsingApiKey, className }: ForecastCardProps) {
   // Ensure date is treated as local time, not UTC, to avoid day shifts
   // Handle potential invalid date string gracefully
   let formattedDate = 'Invalid Date';
@@ -26,7 +27,6 @@ export function ForecastCard({ forecast, className }: ForecastCardProps) {
       console.error("Error parsing forecast date:", forecast.date, e);
   }
 
-
   const formatValue = (value: number | undefined | null, fractionDigits = 0) => {
     if (typeof value !== 'number') return '--';
     return value.toLocaleString('en-US', {
@@ -34,6 +34,10 @@ export function ForecastCard({ forecast, className }: ForecastCardProps) {
         maximumFractionDigits: fractionDigits
      });
   };
+
+   // Determine units based on API usage (example)
+   const windSpeedUnit = isUsingApiKey ? 'm/s' : 'mph';
+   const precipitationUnit = isUsingApiKey ? 'mm' : '"'; // API uses mm, simulation uses inches
 
   return (
     <Card className={cn(
@@ -51,21 +55,24 @@ export function ForecastCard({ forecast, className }: ForecastCardProps) {
             className="w-10 h-10 text-primary mb-1 drop-shadow-sm"
             size={40} // Explicit size prop
         />
-        <p className="text-lg font-semibold text-accent">{formatValue(forecast.temperatureFahrenheit, 0)}°F</p>
+        {/* Display Celsius temperature */}
+        <p className="text-lg font-semibold text-accent">{formatValue(forecast.temperatureCelsius, 0)}°C</p>
         <p className="text-xs text-secondary-foreground capitalize mb-2 truncate w-full" title={forecast.conditions}>{forecast.conditions}</p>
         <div className="space-y-1 text-xs text-muted-foreground w-full">
           <div className="flex items-center gap-1 justify-center" title="Humidity">
             <Droplet className="w-3 h-3 flex-shrink-0" />
             <span>{formatValue(forecast.humidity, 0)}%</span>
           </div>
-          <div className="flex items-center gap-1 justify-center" title="Wind Speed">
+          <div className="flex items-center gap-1 justify-center" title={`Wind Speed (${windSpeedUnit})`}>
             <Wind className="w-3 h-3 flex-shrink-0" />
-            <span>{formatValue(forecast.windSpeed, 0)} mph</span>
+            {/* Display wind speed with unit */}
+            <span>{formatValue(forecast.windSpeed, 1)} {windSpeedUnit}</span>
           </div>
-           <div className="flex items-center gap-1 justify-center" title="Precipitation">
+           <div className="flex items-center gap-1 justify-center" title={`Precipitation (${precipitationUnit})`}>
             <Umbrella className="w-3 h-3 flex-shrink-0" />
             {/* Show precipitation with 1 or 2 decimal places if > 0 */}
-            <span>{formatValue(forecast.precipitation, forecast.precipitation > 0 ? (forecast.precipitation < 0.1 ? 2 : 1) : 0)}"</span>
+            {/* Display precipitation with unit */}
+            <span>{formatValue(forecast.precipitation, forecast.precipitation > 0 ? (forecast.precipitation < 0.1 ? 2 : 1) : 0)}{precipitationUnit}</span>
           </div>
         </div>
       </CardContent>

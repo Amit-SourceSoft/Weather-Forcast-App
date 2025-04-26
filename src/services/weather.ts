@@ -21,9 +21,9 @@ export interface DailyForecast {
    */
   date: string;
   /**
-   * The average temperature in Fahrenheit.
+   * The average temperature in Celsius.
    */
-  temperatureFahrenheit: number;
+  temperatureCelsius: number;
   /**
    * The average humidity percentage.
    */
@@ -31,11 +31,11 @@ export interface DailyForecast {
   /**
    * The average wind speed in miles per hour.
    */
-  windSpeed: number;
+  windSpeed: number; // Keep mph for now unless specified otherwise
   /**
    * The total precipitation in inches.
    */
-  precipitation: number;
+  precipitation: number; // Keep inches for now unless specified otherwise
   /**
    * A general description of the weather conditions (e.g., Sunny, Partly cloudy, Light rain).
    */
@@ -51,9 +51,9 @@ export interface DailyForecast {
  */
 export interface Weather {
   /**
-   * The current temperature in Fahrenheit. ex: 73
+   * The current temperature in Celsius. ex: 23
    */
-  temperatureFarenheit: number;
+  temperatureCelsius: number;
   /**
    * A description of the current weather conditions (e.g., Sunny, Cloudy, Rainy).
    */
@@ -74,7 +74,7 @@ export interface Weather {
 
 
 // --- Configuration ---
-const API_KEY = process.env.WEATHER_API_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY; // Use NEXT_PUBLIC_ prefix for client-side access check
 const USE_SIMULATION = !API_KEY; // Use simulation if no API key is provided
 
 // --- Helper Functions (Simulated Data) ---
@@ -82,16 +82,17 @@ const USE_SIMULATION = !API_KEY; // Use simulation if no API key is provided
 function simulateCurrentWeather(location: Location): Weather {
   console.warn(`SIMULATION: Generating dummy current weather for ${location.lat}, ${location.lng}. Add WEATHER_API_KEY to .env for real data.`);
   // Simple simulation based on latitude (e.g., warmer towards equator)
-  const baseTemp = 60 + (40 - Math.abs(location.lat)) * 0.5;
+  const baseTempCelsius = 15 + (20 - Math.abs(location.lat)) * 0.4; // Adjusted base for Celsius
   const conditions = ['Sunny', 'Partly cloudy', 'Cloudy', 'Light rain', 'Showers', 'Thunderstorm', 'Snow'];
   // Make condition slightly dependent on location for variety
   const conditionIndex = Math.floor(Math.abs(location.lat + location.lng)) % conditions.length;
 
   return {
-    temperatureFarenheit: baseTemp + Math.random() * 10 - 5, // Add some randomness
+    temperatureCelsius: baseTempCelsius + Math.random() * 5 - 2.5, // Add some randomness
     conditions: conditions[conditionIndex],
     humidity: 40 + Math.random() * 40,
     windSpeed: 5 + Math.random() * 15,
+    iconCode: `sim_${conditionIndex}${Math.random() > 0.5 ? 'd' : 'n'}`, // Simulate icon code
   };
 }
 
@@ -107,16 +108,17 @@ function simulateForecast(location: Location, days: number): DailyForecast[] {
         const dateString = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
 
         // Simulate daily variation
-        const baseTemp = 60 + (40 - Math.abs(location.lat)) * 0.5 + Math.sin(i * Math.PI / 7) * 5; // Weekly temp wave
+        const baseTempCelsius = 15 + (20 - Math.abs(location.lat)) * 0.4 + Math.sin(i * Math.PI / 7) * 3; // Weekly temp wave in Celsius
         const conditionIndex = Math.floor(Math.abs(location.lat + location.lng + i)) % conditions.length;
 
         forecast.push({
             date: dateString,
-            temperatureFahrenheit: baseTemp + Math.random() * 8 - 4,
+            temperatureCelsius: baseTempCelsius + Math.random() * 4 - 2,
             humidity: 50 + Math.random() * 30,
             windSpeed: 3 + Math.random() * 12,
-            precipitation: Math.random() < 0.2 ? Math.random() * 0.5 : 0, // Chance of precipitation
+            precipitation: Math.random() < 0.2 ? Math.random() * 0.5 : 0, // Chance of precipitation (keep inches for now)
             conditions: conditions[conditionIndex],
+            iconCode: `sim_${conditionIndex}${Math.random() > 0.5 ? 'd' : 'n'}`, // Simulate icon code
         });
     }
     return forecast;
@@ -139,35 +141,41 @@ export async function getWeather(location: Location): Promise<Weather> {
   }
 
   // --- Real API Implementation Example (requires an API key) ---
-  // Replace with your chosen API endpoint and data mapping
-  // Example using OpenWeatherMap (adjust URL and params as needed):
-  // const url = `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lng}&appid=${API_KEY}&units=imperial`;
-  // try {
-  //   const response = await fetch(url);
-  //   if (!response.ok) {
-  //     throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-  //   }
-  //   const data = await response.json();
+  // Example using OpenWeatherMap: Use 'metric' for Celsius
+  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lng}&appid=${API_KEY}&units=metric`;
+  try {
+    const response = await fetch(url);
+    const data = await response.json(); // Read response body once
 
-  //   // Map API response to Weather interface
-  //   const weather: Weather = {
-  //     temperatureFarenheit: data.main.temp,
-  //     conditions: data.weather[0]?.main || 'Unknown', // Example mapping
-  //     humidity: data.main.humidity,
-  //     windSpeed: data.wind.speed,
-  //     iconCode: data.weather[0]?.icon,
-  //   };
-  //   return weather;
-  // } catch (error) {
-  //   console.error("Error fetching real current weather:", error);
-  //   throw error; // Re-throw the error to be handled by the caller
-  // }
+    if (!response.ok) {
+        let errorMessage = `API request failed: ${response.status} ${response.statusText}`;
+        if (data && data.message) {
+            errorMessage += ` - ${data.message}`; // Append API-provided error message
+        }
+        // Specific check for common API key issues
+        if (response.status === 401) {
+             errorMessage = 'Invalid or unauthorized API key. Check your .env configuration and OpenWeatherMap subscription.';
+        }
+      throw new Error(errorMessage);
+    }
+
+
+    // Map API response to Weather interface
+    const weather: Weather = {
+      temperatureCelsius: data.main.temp,
+      conditions: data.weather[0]?.description || data.weather[0]?.main || 'Unknown', // Use description if available
+      humidity: data.main.humidity,
+      // Convert wind speed from m/s (metric) to mph if desired, or keep m/s
+      // windSpeed: data.wind.speed * 2.23694, // m/s to mph
+      windSpeed: data.wind.speed, // Keeping m/s for now, will display as such
+      iconCode: data.weather[0]?.icon,
+    };
+    return weather;
+  } catch (error) {
+    console.error("Error fetching real current weather:", error);
+    throw error; // Re-throw the error to be handled by the caller
+  }
   // --- End Real API Example ---
-
-  // If API_KEY is set but the code above is commented out, fall back to simulation with a warning.
-  console.warn("WEATHER_API_KEY is set, but real API fetch logic is commented out. Using simulation.");
-  await new Promise(resolve => setTimeout(resolve, 300));
-  return simulateCurrentWeather(location);
 }
 
 
@@ -176,7 +184,7 @@ export async function getWeather(location: Location): Promise<Weather> {
  * Uses a real API if WEATHER_API_KEY is set, otherwise returns simulated data.
  *
  * @param location The location for which to retrieve weather data.
- * @param days The number of days for the forecast (max depends on API, often 7-16).
+ * @param days The number of days for the forecast (max depends on API, often 7-16). OpenWeatherMap free provides 5 days / 3 hours. OneCall API provides daily forecasts.
  * @returns A promise that resolves to an array of DailyForecast objects.
  * @throws Throws an error if the API call fails (and not using simulation).
  */
@@ -187,41 +195,52 @@ export async function getForecast(location: Location, days: number): Promise<Dai
   }
 
   // --- Real API Implementation Example (requires an API key) ---
-  // Replace with your chosen API endpoint and data mapping
-  // Example using OpenWeatherMap 16-day forecast (paid or limited free tier) or a 7-day API:
-  // Note: OpenWeatherMap free tier might only offer 5-day/3-hour forecast easily.
-  // A common approach is the One Call API (requires subscription for >7 days usually)
-  // const url = `https://api.openweathermap.org/data/2.5/forecast/daily?lat=${location.lat}&lon=${location.lng}&cnt=${days}&appid=${API_KEY}&units=imperial`; // Example daily forecast URL
-  // Or for One Call API (adjust version and params):
-  // const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${location.lat}&lon=${location.lng}&exclude=current,minutely,hourly,alerts&appid=${API_KEY}&units=imperial`;
+  // Using OpenWeatherMap One Call API 3.0 (Recommended for daily forecasts)
+  // Note: May require subscription for full access. Ensure your plan supports daily forecasts.
+  // Use 'metric' for Celsius. 'exclude' can optimize the call.
+  const exclude = 'current,minutely,hourly,alerts'; // Exclude parts you don't need
+  const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${location.lat}&lon=${location.lng}&exclude=${exclude}&appid=${API_KEY}&units=metric`;
 
-  // try {
-  //   const response = await fetch(url);
-  //   if (!response.ok) {
-  //     throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-  //   }
-  //   const data = await response.json();
+  try {
+    const response = await fetch(url);
+     const data = await response.json(); // Read response body once
 
-  //   // Map API response to DailyForecast interface (adjust based on API structure)
-  //   const forecast: DailyForecast[] = data.daily.slice(0, days).map((dayData: any) => ({ // Example mapping for One Call API
-  //     date: new Date(dayData.dt * 1000).toISOString().split('T')[0],
-  //     temperatureFahrenheit: dayData.temp.day, // Average day temp
-  //     humidity: dayData.humidity,
-  //     windSpeed: dayData.wind_speed,
-  //     precipitation: dayData.rain || 0, // Precipitation volume in mm, convert if needed
-  //     conditions: dayData.weather[0]?.main || 'Unknown',
-  //     iconCode: dayData.weather[0]?.icon,
-  //   }));
-  //   return forecast;
+    if (!response.ok) {
+       let errorMessage = `API request failed: ${response.status} ${response.statusText}`;
+        if (data && data.message) {
+            errorMessage += ` - ${data.message}`; // Append API-provided error message
+        }
+         // Specific check for common API key issues
+        if (response.status === 401) {
+             errorMessage = 'Invalid or unauthorized API key. Check your .env configuration and OpenWeatherMap subscription for OneCall API access.';
+        }
+      throw new Error(errorMessage);
+    }
 
-  // } catch (error) {
-  //   console.error("Error fetching real forecast:", error);
-  //   throw error; // Re-throw the error
-  // }
+    if (!data.daily) {
+        console.warn("API response did not contain 'daily' forecast data. Check API plan or response structure.");
+        return []; // Return empty array or throw a more specific error
+    }
+
+    // Map API response to DailyForecast interface (adjust based on API structure)
+    const forecast: DailyForecast[] = data.daily.slice(0, days).map((dayData: any) => ({
+      date: new Date(dayData.dt * 1000).toISOString().split('T')[0],
+      temperatureCelsius: dayData.temp.day, // Average day temp in Celsius
+      humidity: dayData.humidity,
+       // Convert wind speed from m/s (metric) to mph if desired
+      // windSpeed: dayData.wind_speed * 2.23694, // m/s to mph
+      windSpeed: dayData.wind_speed, // Keeping m/s
+      // Precipitation is in mm, convert to inches if needed
+      // precipitation: (dayData.rain || 0) / 25.4, // mm to inches
+      precipitation: (dayData.rain || 0), // Keeping mm
+      conditions: dayData.weather[0]?.description || dayData.weather[0]?.main || 'Unknown', // Use description
+      iconCode: dayData.weather[0]?.icon,
+    }));
+    return forecast;
+
+  } catch (error) {
+    console.error("Error fetching real forecast:", error);
+    throw error; // Re-throw the error
+  }
   // --- End Real API Example ---
-
-  // If API_KEY is set but the code above is commented out, fall back to simulation with a warning.
-  console.warn("WEATHER_API_KEY is set, but real API fetch logic is commented out. Using simulation.");
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return simulateForecast(location, days);
 }

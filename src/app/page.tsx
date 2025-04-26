@@ -11,9 +11,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from '@/lib/utils'; // Import cn utility
 
-// Placeholder for potential future animation components
-// import { RainAnimation } from '@/components/animations/RainAnimation';
-// import { SnowAnimation } from '@/components/animations/SnowAnimation';
+// Import animation components
+import { RainAnimation } from '@/components/animations/RainAnimation';
+import { SnowAnimation } from '@/components/animations/SnowAnimation';
 
 export default function Home() {
   const {
@@ -24,6 +24,7 @@ export default function Home() {
     currentCity,
     searchByCity,
     detectLocationAndFetch,
+    isUsingApiKey, // Get API key status
   } = useWeather();
 
   const { toast } = useToast();
@@ -53,12 +54,14 @@ export default function Home() {
 
   // Determine current weather condition for potential animation
   const condition = currentWeather?.conditions?.toLowerCase() || '';
+  const showRainAnimation = condition.includes('rain') || condition.includes('shower') || condition.includes('drizzle');
+  const showSnowAnimation = condition.includes('snow') || condition.includes('flurries') || condition.includes('sleet');
 
   return (
     <>
-      {/* Potential location for background weather animations */}
-      {/* {condition.includes('rain') && <RainAnimation />} */}
-      {/* {condition.includes('snow') && <SnowAnimation />} */}
+      {/* Conditionally render animations based on weather condition */}
+      {showRainAnimation && <RainAnimation />}
+      {showSnowAnimation && <SnowAnimation />}
       <main className="relative flex min-h-screen flex-col items-center p-4 md:p-12 bg-gradient-to-br from-background via-primary/10 to-secondary/20 overflow-hidden"> {/* Added relative and overflow-hidden */}
         <header className="w-full max-w-4xl mb-8 flex justify-center">
            <Logo className="h-10 w-auto animate-in fade-in duration-1000" />
@@ -78,21 +81,23 @@ export default function Home() {
           />
 
           {/* Current Weather */}
-          {/* Animations could also be placed inside or around this card */}
           <CurrentWeatherCard
             weather={currentWeather}
             city={currentCity}
             isLoading={isLoading}
+            isUsingApiKey={isUsingApiKey} // Pass API key status
           />
 
           {/* 15-Day Forecast */}
           <ForecastDisplay
             forecasts={forecast}
             isLoading={isLoading}
+            isUsingApiKey={isUsingApiKey} // Pass API key status
+            error={error} // Pass error for potential conditional rendering inside
           />
         </div>
          <footer className="mt-12 text-center text-xs text-muted-foreground animate-in fade-in delay-500 duration-1000 z-10"> {/* Added z-index */}
-            Weather data provided by {process.env.NEXT_PUBLIC_WEATHER_API_KEY ? 'a real-time API' : 'a simulated API (add WEATHER_API_KEY to .env for real data)'}. Complex weather animations (rain, snow) not implemented.
+            Weather data provided by {isUsingApiKey ? 'a real-time API' : 'a simulated API (add NEXT_PUBLIC_WEATHER_API_KEY to .env for real data)'}.
         </footer>
       </main>
       <Toaster /> {/* Add Toaster component here */}
