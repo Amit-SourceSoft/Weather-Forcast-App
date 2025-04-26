@@ -1,4 +1,4 @@
-# Forecast Frontier
+# Weather App
 
 This is a Next.js weather forecast application built in Firebase Studio.
 

@@ -25,7 +25,7 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
         fill="url(#logoGradient)"
         fontFamily="var(--font-geist-sans), sans-serif"
       >
-        Forecast Frontier
+        Weather App
       </text>
     </svg>
   );

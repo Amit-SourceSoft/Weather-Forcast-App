@@ -1,4 +1,4 @@
-# **App Name**: Forecast Frontier
+# **App Name**: Weather App
 
 ## Core Features:
 
