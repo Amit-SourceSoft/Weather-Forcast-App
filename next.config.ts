@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -16,13 +17,13 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-      // Optional: Add hostname for weather icons if using an API like OpenWeatherMap
-      // {
-      //   protocol: 'https',
-      //   hostname: 'openweathermap.org',
-      //   port: '',
-      //   pathname: '/img/wn/**',
-      // },
+      // Add hostname for weather icons from OpenWeatherMap
+      {
+        protocol: 'https',
+        hostname: 'openweathermap.org',
+        port: '',
+        pathname: '/img/wn/**', // Allow icons from the /img/wn/ path
+      },
     ],
   },
   // Expose the API key to the client-side environment
