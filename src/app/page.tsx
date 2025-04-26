@@ -1,13 +1,14 @@
+
 "use client"; // Required for hooks like useState, useEffect, and event handlers
 
+import { useEffect } from 'react';
 import { useWeather } from '@/hooks/useWeather';
 import { CurrentWeatherCard } from '@/components/weather/CurrentWeatherCard';
 import { ForecastDisplay } from '@/components/weather/ForecastDisplay';
 import { LocationControls } from '@/components/weather/LocationControls';
 import { Logo } from '@/components/Logo';
-import { Toaster } from "@/components/ui/toaster"; // Import Toaster
-import { useToast } from "@/hooks/use-toast"; // Import useToast
-import { useEffect } from 'react';
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const {
@@ -20,7 +21,17 @@ export default function Home() {
     detectLocationAndFetch,
   } = useWeather();
 
-  const { toast } = useToast(); // Get the toast function
+  const { toast } = useToast();
+
+  // Fetch weather for current location on initial load
+  useEffect(() => {
+    // Only fetch if not already loading and no data exists yet
+    // This prevents re-fetching if the component re-renders for other reasons
+    if (!isLoading && !currentWeather && !error) {
+      detectLocationAndFetch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   // Show error toast when error state changes
   useEffect(() => {
@@ -53,7 +64,7 @@ export default function Home() {
             weather={currentWeather}
             city={currentCity}
             isLoading={isLoading}
-            // We handle error display via toast now, but can keep this for specific card errors if needed
+            // Error is now handled by toast
             // error={error}
           />
 
@@ -61,7 +72,7 @@ export default function Home() {
           <ForecastDisplay
             forecasts={forecast}
             isLoading={isLoading}
-             // We handle error display via toast now
+             // Error is now handled by toast
             // error={error}
           />
         </div>
