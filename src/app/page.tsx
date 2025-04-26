@@ -11,6 +11,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from '@/lib/utils'; // Import cn utility
 
+// Placeholder for potential future animation components
+// import { RainAnimation } from '@/components/animations/RainAnimation';
+// import { SnowAnimation } from '@/components/animations/SnowAnimation';
+
 export default function Home() {
   const {
     currentWeather,
@@ -47,16 +51,22 @@ export default function Home() {
 
   const hasData = !!currentWeather || forecast.length > 0;
 
+  // Determine current weather condition for potential animation
+  const condition = currentWeather?.conditions?.toLowerCase() || '';
+
   return (
     <>
-      <main className="flex min-h-screen flex-col items-center p-4 md:p-12 bg-gradient-to-br from-background via-primary/10 to-secondary/20">
+      {/* Potential location for background weather animations */}
+      {/* {condition.includes('rain') && <RainAnimation />} */}
+      {/* {condition.includes('snow') && <SnowAnimation />} */}
+      <main className="relative flex min-h-screen flex-col items-center p-4 md:p-12 bg-gradient-to-br from-background via-primary/10 to-secondary/20 overflow-hidden"> {/* Added relative and overflow-hidden */}
         <header className="w-full max-w-4xl mb-8 flex justify-center">
            <Logo className="h-10 w-auto animate-in fade-in duration-1000" />
         </header>
 
         {/* Add animation to the main content container */}
         <div className={cn(
-             "w-full max-w-4xl flex flex-col items-center gap-6 transition-opacity duration-500 ease-in-out",
+             "w-full max-w-4xl flex flex-col items-center gap-6 transition-opacity duration-500 ease-in-out z-10", // Added z-index
              isLoading && !hasData ? "opacity-50" : "opacity-100", // Fade slightly during initial load
              hasData && !isLoading ? "animate-in fade-in-50 slide-in-from-bottom-10 duration-500 ease-out" : "" // Animate in when data arrives
              )}>
@@ -68,6 +78,7 @@ export default function Home() {
           />
 
           {/* Current Weather */}
+          {/* Animations could also be placed inside or around this card */}
           <CurrentWeatherCard
             weather={currentWeather}
             city={currentCity}
@@ -80,8 +91,8 @@ export default function Home() {
             isLoading={isLoading}
           />
         </div>
-         <footer className="mt-12 text-center text-xs text-muted-foreground animate-in fade-in delay-500 duration-1000">
-            Weather data provided by a simulated API. Complex weather animations (rain, snow) not implemented.
+         <footer className="mt-12 text-center text-xs text-muted-foreground animate-in fade-in delay-500 duration-1000 z-10"> {/* Added z-index */}
+            Weather data provided by {process.env.NEXT_PUBLIC_WEATHER_API_KEY ? 'a real-time API' : 'a simulated API (add WEATHER_API_KEY to .env for real data)'}. Complex weather animations (rain, snow) not implemented.
         </footer>
       </main>
       <Toaster /> {/* Add Toaster component here */}
