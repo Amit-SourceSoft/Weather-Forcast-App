@@ -2,6 +2,7 @@ import type { Weather } from '@/services/weather';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WeatherIcon } from './WeatherIcon';
 import { Thermometer, Droplet, Wind, Loader2 } from 'lucide-react'; // Added Loader2 for spinning icon
+import { MapPin } from 'lucide-react'; // Added MapPin for the placeholder state
 
 type CurrentWeatherCardProps = {
   weather: Weather | null;
@@ -12,6 +13,13 @@ type CurrentWeatherCardProps = {
 
 export function CurrentWeatherCard({ weather, city, isLoading }: CurrentWeatherCardProps) {
   const hasData = !!weather;
+
+  const formatValue = (value: number | undefined) => {
+    if (typeof value !== 'number') return '';
+    // Use toLocaleString for better number formatting, limiting to 2 decimal places
+    return value.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  };
+
 
   return (
     <Card className="w-full max-w-md shadow-lg rounded-xl overflow-hidden transition-all duration-300 ease-in-out">
@@ -36,18 +44,20 @@ export function CurrentWeatherCard({ weather, city, isLoading }: CurrentWeatherC
           <div className="flex flex-col items-center gap-4 animate-in fade-in duration-500">
             <WeatherIcon condition={weather.conditions} className="w-20 h-20 text-accent drop-shadow-lg" />
             <div className="text-center">
-              <p className="text-5xl font-bold text-primary drop-shadow-sm">{weather.temperatureFarenheit}°F</p>
+              <p className="text-5xl font-bold text-primary drop-shadow-sm">
+                {formatValue(weather.temperatureFarenheit)}°F
+              </p>
               <p className="text-lg text-secondary-foreground capitalize">{weather.conditions}</p>
             </div>
-            {/* Example details (ensure these exist in your Weather type if used) */}
+            {/* Removed example details as they are not part of the base Weather type */}
             {/* <div className="flex justify-around w-full mt-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Droplet className="w-4 h-4" />
-                <span>{weather.humidity}%</span>
+                <span>{formatValue(weather.humidity)}%</span> {}
               </div>
               <div className="flex items-center gap-1">
                 <Wind className="w-4 h-4" />
-                <span>{weather.windSpeed} mph</span>
+                <span>{formatValue(weather.windSpeed)} mph</span> {}
               </div>
             </div> */}
           </div>
@@ -63,6 +73,3 @@ export function CurrentWeatherCard({ weather, city, isLoading }: CurrentWeatherC
     </Card>
   );
 }
-
-// Added MapPin for the placeholder state
-import { MapPin } from 'lucide-react';
