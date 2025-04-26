@@ -25,8 +25,8 @@ export function CurrentWeatherCard({ weather, city, isLoading, isUsingApiKey }: 
     });
   };
 
-  // Determine wind speed unit based on API usage (example)
-  const windSpeedUnit = isUsingApiKey ? 'm/s' : 'mph'; // API uses metric (m/s), simulation uses mph
+  // Determine wind speed unit based on API usage (m/s for API, mph for simulation)
+  const windSpeedUnit = isUsingApiKey ? 'm/s' : 'm/s'; // Keep m/s for both for consistency as simulation now uses m/s
 
 
   return (
@@ -50,12 +50,14 @@ export function CurrentWeatherCard({ weather, city, isLoading, isUsingApiKey }: 
         ) : hasData ? (
           // Animate content in when loaded
           <div className="flex flex-col items-center gap-4 animate-in fade-in duration-500 w-full">
-             {/* Pass iconCode and condition */}
+             {/* Pass iconCode, condition, and isUsingApiKey */}
             <WeatherIcon
                 condition={weather.conditions}
                 iconCode={weather.iconCode}
+                isUsingApiKey={isUsingApiKey} // Pass API key status
+                isLoading={isLoading} // Pass loading status
                 className="w-20 h-20 text-accent drop-shadow-lg"
-                size={80} // Explicit size prop for Lucide
+                size={80} // Explicit size prop for Lucide/Image fallback
             />
             <div className="text-center">
               <p className="text-5xl font-bold text-primary drop-shadow-sm">

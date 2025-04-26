@@ -16,12 +16,14 @@ export function ForecastCard({ forecast, isUsingApiKey, className }: ForecastCar
   // Handle potential invalid date string gracefully
   let formattedDate = 'Invalid Date';
   try {
-      const dateParts = forecast.date.split('-').map(Number);
-      if (dateParts.length === 3 && !isNaN(dateParts[0]) && !isNaN(dateParts[1]) && !isNaN(dateParts[2])) {
-        const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-        if (!isNaN(localDate.getTime())) {
+      // Date is already YYYY-MM-DD string, safe to parse directly if valid
+      if (forecast.date && forecast.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const dateParts = forecast.date.split('-').map(Number);
+          // Create date ensuring it uses local timezone interpretation
+          const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+          if (!isNaN(localDate.getTime())) {
             formattedDate = format(localDate, 'EEE, MMM d');
-        }
+          }
       }
   } catch (e) {
       console.error("Error parsing forecast date:", forecast.date, e);
@@ -35,9 +37,9 @@ export function ForecastCard({ forecast, isUsingApiKey, className }: ForecastCar
      });
   };
 
-   // Determine units based on API usage (example)
-   const windSpeedUnit = isUsingApiKey ? 'm/s' : 'mph';
-   const precipitationUnit = isUsingApiKey ? 'mm' : '"'; // API uses mm, simulation uses inches
+   // Units are now consistent based on API (m/s, mm) or simulation (m/s, mm)
+   const windSpeedUnit = 'm/s';
+   const precipitationUnit = 'mm';
 
   return (
     <Card className={cn(
@@ -48,10 +50,11 @@ export function ForecastCard({ forecast, isUsingApiKey, className }: ForecastCar
         <CardTitle className="text-xs font-medium text-muted-foreground whitespace-nowrap">{formattedDate}</CardTitle>
       </CardHeader>
       <CardContent className="p-3 flex flex-col items-center gap-1 flex-grow justify-between w-full">
-        {/* Pass iconCode and condition */}
+        {/* Pass iconCode, condition, and isUsingApiKey */}
         <WeatherIcon
             condition={forecast.conditions}
             iconCode={forecast.iconCode}
+            isUsingApiKey={isUsingApiKey} // Pass API key status
             className="w-10 h-10 text-primary mb-1 drop-shadow-sm"
             size={40} // Explicit size prop
         />
@@ -70,9 +73,9 @@ export function ForecastCard({ forecast, isUsingApiKey, className }: ForecastCar
           </div>
            <div className="flex items-center gap-1 justify-center" title={`Precipitation (${precipitationUnit})`}>
             <Umbrella className="w-3 h-3 flex-shrink-0" />
-            {/* Show precipitation with 1 or 2 decimal places if > 0 */}
+            {/* Show precipitation with 1 decimal place */}
             {/* Display precipitation with unit */}
-            <span>{formatValue(forecast.precipitation, forecast.precipitation > 0 ? (forecast.precipitation < 0.1 ? 2 : 1) : 0)}{precipitationUnit}</span>
+            <span>{formatValue(forecast.precipitation, 1)}{precipitationUnit}</span>
           </div>
         </div>
       </CardContent>

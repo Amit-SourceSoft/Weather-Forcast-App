@@ -1,6 +1,6 @@
 import type { LucideProps } from 'lucide-react';
 import {
-    Sun, Cloud, CloudSun, CloudRain, CloudSnow, CloudLightning, Wind, Cloudy, Haze, CloudFog, CloudDrizzle, Tornado, Snowflake, CloudSunRain, CloudMoon, Moon
+    Sun, Cloud, CloudSun, CloudRain, CloudSnow, CloudLightning, Wind, Cloudy, Haze, CloudFog, CloudDrizzle, Tornado, Snowflake, CloudSunRain, CloudMoon, Moon, Loader2 // Added Loader2
 } from 'lucide-react';
 import * as React from 'react';
 import { cn } from '@/lib/utils';
@@ -10,21 +10,21 @@ type WeatherIconProps = {
   condition?: string; // General condition text
   iconCode?: string; // API-specific icon code (e.g., '01d' from OpenWeatherMap)
   isLoading?: boolean; // Add isLoading prop
+  isUsingApiKey?: boolean; // Indicate if API key is active
 } & Omit<LucideProps, 'ref'>; // Omit ref as it's handled internally or by wrapper
 
-// Simple mapping from common condition terms to Lucide icons
-// Prioritize API iconCode if available
+// Mapping from common condition terms to Lucide icons (used as fallback)
 const conditionToIconMap: { [key: string]: React.ComponentType<LucideProps> } = {
   sun: Sun,
-  clear: Sun, // Often used interchangeably with sunny
+  clear: Sun,
   cloud: Cloud,
   cloudy: Cloudy,
   'partly cloudy': CloudSun,
   'mostly sunny': CloudSun,
-  'mostly cloudy': Cloud, // Can refine this
+  'mostly cloudy': Cloud,
   rain: CloudRain,
   drizzle: CloudDrizzle,
-  showers: CloudSunRain, // Or CloudRain
+  showers: CloudSunRain,
   snow: CloudSnow,
   snowflake: Snowflake,
   thunderstorm: CloudLightning,
@@ -34,76 +34,63 @@ const conditionToIconMap: { [key: string]: React.ComponentType<LucideProps> } = 
   haze: Haze,
   mist: CloudFog,
   tornado: Tornado,
-  moon: Moon, // For night conditions
+  moon: Moon,
   'clear night': Moon,
   'cloudy night': CloudMoon,
+  // Add more specific mappings as needed
 };
 
-// Example mapping for OpenWeatherMap icon codes to Lucide icons
-// Ref: https://openweathermap.org/weather-conditions#Weather-Condition-Codes-2
-const owmIconMap: { [key: string]: React.ComponentType<LucideProps> } = {
-    '01d': Sun, '01n': Moon,
-    '02d': CloudSun, '02n': CloudMoon,
-    '03d': Cloud, '03n': Cloud, // Scattered clouds
-    '04d': Cloudy, '04n': Cloudy, // Broken clouds / Overcast
-    '09d': CloudRain, '09n': CloudRain, // Shower rain
-    '10d': CloudSunRain, '10n': CloudRain, // Rain (adjust night?)
-    '11d': CloudLightning, '11n': CloudLightning, // Thunderstorm
-    '13d': CloudSnow, '13n': CloudSnow, // Snow
-    '50d': Haze, '50n': CloudFog, // Mist/Fog/Haze
-    // Default fallback
-    default: Cloud,
-}
+// Define the base URL for OpenWeatherMap icons
+const OWM_ICON_BASE_URL = 'https://openweathermap.org/img/wn/';
 
-export function WeatherIcon({ condition, iconCode, isLoading = false, className, ...props }: WeatherIconProps) {
+export function WeatherIcon({
+    condition,
+    iconCode,
+    isLoading = false,
+    isUsingApiKey = false, // Default to false if not provided
+    className,
+    ...props // Spread remaining props (like size)
+}: WeatherIconProps) {
   const lowerCaseCondition = condition?.toLowerCase() || '';
-  let IconComponent: React.ComponentType<LucideProps> | null = null;
-  let useApiIcon = false;
 
-  // --- Determine Icon ---
+  // 1. Handle Loading State
   if (isLoading) {
-    // Handle loading state separately if needed, or let parent handle it
-    // return <Loader2 className={cn('animate-spin', className)} {...props} />;
-    return null; // Or a placeholder skeleton
+    // Render a loading indicator (optional, parent might handle it)
+    return <Loader2 className={cn('animate-spin', className)} {...props} />;
+    // return null; // Or let parent show loading state
   }
 
-  // 1. Prioritize API Icon Code (if available and provider is known, e.g., OpenWeatherMap)
-  if (iconCode) {
-      // Assuming OpenWeatherMap for this example:
-      const owmIconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
-      // If you prefer Lucide icons even with API code, map it:
-      // IconComponent = owmIconMap[iconCode] || owmIconMap.default;
+  // 2. Use Real API Icon if available and API key is used
+  if (isUsingApiKey && iconCode) {
+    const iconUrl = `${OWM_ICON_BASE_URL}${iconCode}@2x.png`;
+    // Ensure size prop is handled correctly for next/image
+    const size = typeof props.size === 'number' ? props.size : 50; // Default size if not provided
 
-      // Set flag to use Next Image with the API icon URL
-      useApiIcon = true;
-       return (
-        <Image
-          src={owmIconUrl}
-          alt={condition || 'Weather icon'}
-          width={props.size || 50} // Adjust default size as needed
-          height={props.size || 50}
-          className={cn("transition-all duration-300 ease-in-out", className)}
-          // {...props} // Pass other compatible props if needed, careful with spreading LucideProps here
-        />
-      );
+    return (
+      <Image
+        src={iconUrl}
+        alt={condition || 'Weather icon'}
+        width={size}
+        height={size}
+        className={cn("transition-all duration-300 ease-in-out", className)} // Apply className here
+        // Pass other compatible props, filter out incompatible LucideProps if necessary
+        // Example: title might be useful
+        title={condition} // Add title attribute for better accessibility/tooltip
+        unoptimized // Prevent potential issues with external image optimization if not configured
+      />
+    );
   }
 
+  // 3. Fallback to Lucide Icons based on condition text
+  let IconComponent: React.ComponentType<LucideProps> | null = null;
 
-  // 2. Fallback to condition text mapping if no API icon code
-  if (!useApiIcon) {
-      // Find the first matching keyword in the map
-      const matchedKeyword = Object.keys(conditionToIconMap).find(keyword =>
-          lowerCaseCondition.includes(keyword)
-      );
-      IconComponent = matchedKeyword ? conditionToIconMap[matchedKeyword] : Cloud; // Default to Cloud
-  }
+  // Find the first matching keyword in the map
+  const matchedKeyword = Object.keys(conditionToIconMap).find(keyword =>
+    lowerCaseCondition.includes(keyword)
+  );
 
+  IconComponent = matchedKeyword ? conditionToIconMap[matchedKeyword] : Cloudy; // Default to Cloudy if no match
 
-  // --- Render ---
-  if (IconComponent) {
-      return <IconComponent className={cn("transition-all duration-300 ease-in-out", className)} {...props} />;
-  }
-
-  // Fallback if no icon determined (should ideally not happen with defaults)
-  return <Cloud className={cn("transition-all duration-300 ease-in-out text-muted-foreground", className)} {...props} />;
+  // Render the determined Lucide icon
+  return <IconComponent className={cn("transition-all duration-300 ease-in-out", className)} {...props} />;
 }
