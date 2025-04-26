@@ -9,6 +9,7 @@ import { LocationControls } from '@/components/weather/LocationControls';
 import { Logo } from '@/components/Logo';
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from '@/lib/utils'; // Import cn utility
 
 export default function Home() {
   const {
@@ -27,8 +28,8 @@ export default function Home() {
   useEffect(() => {
     // Only fetch if not already loading and no data exists yet
     // This prevents re-fetching if the component re-renders for other reasons
-    if (!isLoading && !currentWeather && !error) {
-      detectLocationAndFetch();
+    if (!isLoading && !currentWeather && !error && forecast.length === 0) { // Added check for forecast length
+        detectLocationAndFetch();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array ensures this runs only once on mount
@@ -44,14 +45,21 @@ export default function Home() {
     }
   }, [error, toast]);
 
+  const hasData = !!currentWeather || forecast.length > 0;
+
   return (
     <>
-      <main className="flex min-h-screen flex-col items-center p-4 md:p-12 bg-gradient-to-br from-background to-secondary/30">
+      <main className="flex min-h-screen flex-col items-center p-4 md:p-12 bg-gradient-to-br from-background via-primary/10 to-secondary/20">
         <header className="w-full max-w-4xl mb-8 flex justify-center">
-           <Logo className="h-10 w-auto" />
+           <Logo className="h-10 w-auto animate-in fade-in duration-1000" />
         </header>
 
-        <div className="w-full max-w-4xl flex flex-col items-center gap-6">
+        {/* Add animation to the main content container */}
+        <div className={cn(
+             "w-full max-w-4xl flex flex-col items-center gap-6 transition-opacity duration-500 ease-in-out",
+             isLoading && !hasData ? "opacity-50" : "opacity-100", // Fade slightly during initial load
+             hasData && !isLoading ? "animate-in fade-in-50 slide-in-from-bottom-10 duration-500 ease-out" : "" // Animate in when data arrives
+             )}>
           {/* Location Controls */}
           <LocationControls
             onCitySearch={searchByCity}
@@ -64,20 +72,16 @@ export default function Home() {
             weather={currentWeather}
             city={currentCity}
             isLoading={isLoading}
-            // Error is now handled by toast
-            // error={error}
           />
 
           {/* 15-Day Forecast */}
           <ForecastDisplay
             forecasts={forecast}
             isLoading={isLoading}
-             // Error is now handled by toast
-            // error={error}
           />
         </div>
-         <footer className="mt-12 text-center text-xs text-muted-foreground">
-            Weather data provided by a simulated API. Animations not implemented.
+         <footer className="mt-12 text-center text-xs text-muted-foreground animate-in fade-in delay-500 duration-1000">
+            Weather data provided by a simulated API. Complex weather animations (rain, snow) not implemented.
         </footer>
       </main>
       <Toaster /> {/* Add Toaster component here */}
