@@ -1,8 +1,10 @@
+
 import type { DailyForecast } from '@/services/weather';
 import { ForecastCard } from './ForecastCard';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
+import { Card } from '@/components/ui/card'; // Import Card component
 
 type ForecastDisplayProps = {
   forecasts: DailyForecast[];
@@ -12,15 +14,15 @@ type ForecastDisplayProps = {
 
 // Skeleton component for loading state
 const ForecastSkeletonCard = () => (
-    <Card className="w-[120px] h-[210px] flex flex-col items-center p-3">
-        <Skeleton className="h-4 w-16 mb-2" /> {/* Date */}
-        <Skeleton className="h-10 w-10 rounded-full my-2" /> {/* Icon */}
-        <Skeleton className="h-6 w-12 mb-2" /> {/* Temp */}
-        <Skeleton className="h-3 w-14 mb-3" /> {/* Condition */}
+    <Card className="w-[120px] h-[210px] flex flex-col items-center p-3 bg-card/50"> {/* Used Card */}
+        <Skeleton className="h-4 w-16 mb-2 bg-muted/50" /> {/* Date */}
+        <Skeleton className="h-10 w-10 rounded-full my-2 bg-muted/50" /> {/* Icon */}
+        <Skeleton className="h-6 w-12 mb-2 bg-muted/50" /> {/* Temp */}
+        <Skeleton className="h-3 w-14 mb-3 bg-muted/50" /> {/* Condition */}
         <div className="space-y-1 w-full">
-            <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-full bg-muted/50" />
+            <Skeleton className="h-3 w-full bg-muted/50" />
+            <Skeleton className="h-3 w-full bg-muted/50" />
         </div>
     </Card>
 );
